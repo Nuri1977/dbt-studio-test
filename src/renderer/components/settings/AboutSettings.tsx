@@ -25,7 +25,7 @@ export const AboutSettings: React.FC = () => {
           </Typography>
         </Box>
         <Typography variant="body2" color="text.secondary">
-          Built with Electron and React. Test autoapdate new version
+          Built with Electron and React.
         </Typography>
       </Box>
 
