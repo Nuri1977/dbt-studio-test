@@ -1,5 +1,5 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.1",
   "name": "rosetta-dbt-studio",
   "description": "Turn Raw Data into Business Insights—Faster with RosettaDB",
   "keywords": [
@@ -8,10 +8,10 @@
     "dbt-studio",
     "ts"
   ],
-  "homepage": "https://github.com/rosettadb/dbt-studio#readme",
+  "homepage": "https://github.com/Nuri1977/dbt-studio-test#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rosettadb/dbt-studio.git"
+    "url": "git+https://github.com/Nuri1977/dbt-studio-test.git"
   },
   "license": "MIT",
   "author": {
@@ -266,8 +266,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "rosettadb",
-      "repo": "dbt-studio"
+      "owner": "Nuri1977",
+      "repo": "dbt-studio-test"
     }
   },
   "devEngines": {
