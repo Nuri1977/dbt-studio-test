@@ -1,5 +1,7 @@
 # Rosetta dbt™ Studio
 
+**Version 1.1.0**
+
 **Rosetta dbt™ Studio** is an open-source desktop application that simplifies your data transformation journey with [dbt™](https://www.getdbt.com/) and brings the power of AI into your analytics engineering workflow.
 
 Whether you're just getting started with dbt™ or looking to streamline your transformation logic with AI assistance, Rosetta dbt™ Studio offers an intuitive interface to help you build, explore, and maintain your data models efficiently.
