@@ -5,7 +5,7 @@ import { loadEnvironment } from './utils/setupHelpers';
 import { AssetUrl } from './utils/assetUrl';
 import { AssetServer } from './utils/assetServer';
 import { setupApplicationIcon } from './utils/iconUtils';
-import { SettingsService } from './services';
+import { SettingsService, analyticsService } from './services';
 import { copyAssetsToUserData } from './utils/fileHelper';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -38,6 +38,11 @@ if (!gotTheLock) {
   app
     .whenReady()
     .then(() => {
+      // Track app launch event
+      analyticsService.trackEvent('Application', 'Launch', {
+        evLabel: `v${app.getVersion()}`
+      });
+
       windowManager = new WindowManager();
       windowManager.startApplication();
       copyAssetsToUserData();
@@ -45,6 +50,9 @@ if (!gotTheLock) {
 
       if (splash) {
         splash.webContents.once('did-finish-load', async () => {
+          // Track splash screen loaded
+          analyticsService.trackScreen('SplashScreen');
+
           const updateMessage = async (msg: string) => {
             await splash.webContents.executeJavaScript(
               `window.updateLoaderMessage(${JSON.stringify(msg)})`,
@@ -56,6 +64,8 @@ if (!gotTheLock) {
             await SettingsService.updateRosetta();
           } catch (e) {
             console.error(e);
+            // Track error
+            analyticsService.trackException(`Rosetta update error: ${e.message}`);
           }
 
           await updateMessage('Embedding Python...');
@@ -63,6 +73,8 @@ if (!gotTheLock) {
             await SettingsService.updatePython();
           } catch (e) {
             console.error(e);
+            // Track error
+            analyticsService.trackException(`Python update error: ${e.message}`);
           }
 
           const fakeStages = [
@@ -102,6 +114,9 @@ if (!gotTheLock) {
             if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
+
+            // Track app activation
+            analyticsService.trackEvent('Application', 'Activate');
           } else {
             // No windows exist, restart application
             windowManager.startApplication();
@@ -113,7 +128,11 @@ if (!gotTheLock) {
         }
       });
     })
-    .catch(console.log);
+    .catch((error) => {
+      console.log(error);
+      // Track startup error
+      analyticsService.trackException(`App startup error: ${error.message}`, 1);
+    });
 
   // Handle second instance attempt - simplified
   app.on('second-instance', () => {
@@ -127,6 +146,9 @@ if (!gotTheLock) {
       if (activeWindow.isMinimized()) activeWindow.restore();
       activeWindow.show();
       activeWindow.focus();
+
+      // Track second instance attempt
+      analyticsService.trackEvent('Application', 'SecondInstance');
     } else {
       // No visible windows, start fresh
       windowManager.startApplication();
@@ -135,5 +157,13 @@ if (!gotTheLock) {
 }
 
 app.on('window-all-closed', () => {
+  // Track all windows closed event
+  analyticsService.trackEvent('Application', 'AllWindowsClosed');
+
   // Don't quit - WindowManager will handle the actual quitting
+});
+
+// Track app quit event
+app.on('will-quit', () => {
+  analyticsService.trackEvent('Application', 'Quit');
 });

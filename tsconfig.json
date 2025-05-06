@@ -13,7 +13,11 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": ".erb/dll",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/main/types"
+    ]
   },
   "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"]
 }
