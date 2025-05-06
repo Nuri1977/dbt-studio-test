@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import electronLog from 'electron-log';
 
 // Your Google Analytics Property ID
-const TRACKING_ID = 'UA-488148515'; // Using UA- prefix as required by Google Analytics
+const TRACKING_ID = 'G-VBXMX54ELS'; // Google Analytics 4 (GA4) tracking ID
 
 class AnalyticsService {
   private analytics: Analytics;
@@ -15,7 +15,7 @@ class AnalyticsService {
     // Generate or retrieve a persistent client ID
     this.clientID = this.getClientID();
 
-    electronLog.info('Analytics service initialized with tracking ID: UA-488148515');
+    electronLog.info('Analytics service initialized with tracking ID: G-VBXMX54ELS');
   }
 
   private getClientID(): string {
