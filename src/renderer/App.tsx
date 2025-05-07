@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   HashRouter as Router,
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import './App.css';
@@ -25,9 +26,27 @@ import { QueryClientContextProvider } from './context/QueryClientContext';
 import { themeStorageManager, getStoredThemeMode } from './utils/themeStorage';
 import { ScrollbarStyles } from './components/scrollbarStyles';
 
+// Analytics tracking component
+const RouteTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Track page view on route change
+    if (window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+        page_title: document.title
+      });
+    }
+  }, [location]);
+
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <Router>
+      <RouteTracker />
       <CssBaseline />
       <ScrollbarStyles />
       <Routes>
