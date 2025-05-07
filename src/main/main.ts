@@ -40,11 +40,42 @@ if (!gotTheLock) {
     .then(() => {
       // Set up session for Google Analytics
       try {
-        // Configure session to allow Google Analytics domains
+        // Configure session to allow Google Analytics domains and log requests/responses
         session.defaultSession.webRequest.onBeforeSendHeaders(
           { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
           (details, callback) => {
+            console.log('GA Request:', {
+              url: details.url,
+              method: details.method,
+              timestamp: new Date().toISOString()
+            });
             callback({ requestHeaders: details.requestHeaders });
+          }
+        );
+
+        // Add response logging
+        session.defaultSession.webRequest.onCompleted(
+          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
+          (details) => {
+            console.log('GA Response:', {
+              url: details.url,
+              statusCode: details.statusCode,
+              statusLine: details.statusLine,
+              timestamp: new Date().toISOString(),
+              fromCache: details.fromCache
+            });
+          }
+        );
+
+        // Handle errors
+        session.defaultSession.webRequest.onErrorOccurred(
+          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
+          (details) => {
+            console.error('GA Error:', {
+              url: details.url,
+              error: details.error,
+              timestamp: new Date().toISOString()
+            });
           }
         );
 

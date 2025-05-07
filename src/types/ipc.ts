@@ -85,3 +85,32 @@ export type ConfigureConnectionBody = {
   projectId: string;
   connection: ConnectionInput;
 };
+
+export interface IpcMainEventMap {
+  // Analytics Debug
+  'analytics:test-event': {
+    request: {
+      category: string;
+      action: string;
+      label?: string;
+    };
+    response: {
+      success: boolean;
+      message: string;
+    };
+  };
+  'analytics:get-status': {
+    request: void;
+    response: {
+      success: boolean;
+      enabled: boolean;
+      lastEvent: {
+        category: string;
+        action: string;
+        label?: string;
+        timestamp: string;
+      } | null;
+      message?: string;
+    };
+  };
+}

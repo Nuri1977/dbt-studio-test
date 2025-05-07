@@ -13,6 +13,27 @@ export default class AnalyticsService {
   private static clientID: string;
   private static sessionID: string;
   private static debugMode: boolean;
+  private static lastEvent: {
+    category: string;
+    action: string;
+    label?: string;
+    timestamp: string;
+    response?: {
+      status?: number;
+      statusText?: string;
+      clientId: string;
+      sessionId: string;
+      serverResponse: any;
+      responseHeaders: any;
+    };
+    error?: {
+      message: string;
+      code?: string;
+      response?: any;
+      status?: number;
+      statusText?: string;
+    };
+  } | null = null;
 
   private static initialize() {
     if (!this.analytics) {
@@ -80,12 +101,53 @@ export default class AnalyticsService {
       }
 
       this.setParams(params);
-      await analytics.event(eventName);
-      this.sendEventToRenderer(category, action, options.evLabel, options.evValue);
+      const response = await analytics.event(eventName);
+
+      // Store the last event with complete response data
+      this.lastEvent = {
+        category,
+        action,
+        label: options.evLabel,
+        timestamp: new Date().toISOString(),
+        response: {
+          status: response?.status,
+          statusText: response?.statusText,
+          clientId: this.clientID,
+          sessionId: this.sessionID,
+          serverResponse: response?.data || null,
+          responseHeaders: response?.headers || null
+        }
+      };
+
+      console.log('Analytics event tracked:', {
+        event: eventName,
+        params,
+        response: this.lastEvent.response
+      });
+
+      return this.lastEvent;
     } catch (err: any) {
-      // Silently fail but still throw for UI handling
+      console.error('Analytics tracking failed:', err);
+      // Store failed event with error details
+      this.lastEvent = {
+        category,
+        action,
+        label: options.evLabel,
+        timestamp: new Date().toISOString(),
+        error: {
+          message: err.message,
+          code: err.code,
+          response: err.response?.data || null,
+          status: err.response?.status,
+          statusText: err.response?.statusText
+        }
+      };
       throw err;
     }
+  }
+
+  static getLastEvent() {
+    return this.lastEvent;
   }
 
   static async trackException(description: string, fatal: number = 0): Promise<void> {
