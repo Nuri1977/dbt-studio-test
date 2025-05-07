@@ -73,13 +73,22 @@ export type GitChannels =
   | 'git:fileDiff'
   | 'git:fileStatusList';
 
+export type AnalyticsChannels =
+  | 'analytics:event'
+  | 'analytics:screen'
+  | 'analytics:pageview'
+  | 'analytics:exception'
+  | 'analytics:test-event'
+  | 'analytics:get-status';
+
 export type Channels =
   | TestChannels
   | CliChannels
   | ProjectChannels
   | SettingsChannels
   | ConnectorChannels
-  | GitChannels;
+  | GitChannels
+  | AnalyticsChannels;
 
 export type ConfigureConnectionBody = {
   projectId: string;
@@ -111,6 +120,52 @@ export interface IpcMainEventMap {
         timestamp: string;
       } | null;
       message?: string;
+    };
+  };
+
+  // Analytics Events
+  'analytics:event': {
+    request: {
+      category: string;
+      action: string;
+      options?: {
+        evLabel?: string;
+        evValue?: number;
+      };
+    };
+    response: {
+      success: boolean;
+      result?: any;
+      error?: string;
+    };
+  };
+  'analytics:screen': {
+    request: {
+      screenName: string;
+    };
+    response: {
+      success: boolean;
+      error?: string;
+    };
+  };
+  'analytics:pageview': {
+    request: {
+      path: string;
+      title: string;
+    };
+    response: {
+      success: boolean;
+      error?: string;
+    };
+  };
+  'analytics:exception': {
+    request: {
+      description: string;
+      fatal?: boolean;
+    };
+    response: {
+      success: boolean;
+      error?: string;
     };
   };
 }
