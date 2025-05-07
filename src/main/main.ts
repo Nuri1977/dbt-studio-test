@@ -1,5 +1,5 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off, no-restricted-syntax: off, no-await-in-loop: off */
-import { app, protocol } from 'electron';
+import { app, protocol, session } from 'electron';
 import { WindowManager } from './windows';
 import { loadEnvironment } from './utils/setupHelpers';
 import { AssetUrl } from './utils/assetUrl';
@@ -38,6 +38,45 @@ if (!gotTheLock) {
   app
     .whenReady()
     .then(() => {
+      // Set up session for Google Analytics
+      try {
+        // Configure session to allow Google Analytics domains
+        session.defaultSession.webRequest.onBeforeSendHeaders(
+          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
+          (details, callback) => {
+            callback({ requestHeaders: details.requestHeaders });
+          }
+        );
+
+        // Ensure cookies are persisted
+        session.defaultSession.cookies.on('changed', (event, cookie, cause, removed) => {
+          if (!removed &&
+              (cookie.domain?.includes('google-analytics.com') ||
+               cookie.domain?.includes('googletagmanager.com'))) {
+            // Construct the URL from the cookie domain and path
+            const protocol = cookie.secure ? 'https' : 'http';
+            const url = `${protocol}://${cookie.domain}${cookie.path || '/'}`;
+
+            // Make the cookie persistent
+            session.defaultSession.cookies.set({
+              url,
+              name: cookie.name,
+              value: cookie.value,
+              domain: cookie.domain,
+              path: cookie.path,
+              secure: cookie.secure,
+              httpOnly: cookie.httpOnly,
+              expirationDate: cookie.expirationDate || (Date.now() / 1000) + 31536000, // 1 year
+              sameSite: cookie.sameSite
+            });
+          }
+        });
+
+        console.log('Google Analytics session handling configured');
+      } catch (e) {
+        console.error('Failed to configure Google Analytics session:', e);
+      }
+
       // Track app launch event
       analyticsService.trackEvent('Application', 'Launch', {
         evLabel: `v${app.getVersion()}`
