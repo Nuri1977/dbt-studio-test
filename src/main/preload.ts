@@ -32,33 +32,17 @@ const electronHandler = {
   },
   // Add analytics bridge
   analytics: {
-    trackEvent(category: string, action: string, label?: string, value?: number) {
-      if (window.gtag) {
-        window.gtag('event', `${category}_${action}`.toLowerCase().replace(/\s+/g, '_'), {
-          event_category: category,
-          event_label: label,
-          value: value,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
+    trackEvent(category: string, action: string, options: { evLabel?: string; evValue?: number } = {}) {
+      return ipcRenderer.invoke('analytics:event', { category, action, options });
     },
-    trackException(description: string, fatal: boolean = false) {
-      if (window.gtag) {
-        window.gtag('event', 'exception', {
-          description: description,
-          fatal: fatal ? 1 : 0,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
+    trackScreen(screenName: string) {
+      return ipcRenderer.invoke('analytics:screen', { screenName });
     },
     trackPageView(path: string, title: string) {
-      if (window.gtag) {
-        window.gtag('event', 'page_view', {
-          page_path: path,
-          page_title: title,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
+      return ipcRenderer.invoke('analytics:pageview', { path, title });
+    },
+    trackException(description: string, fatal: boolean = false) {
+      return ipcRenderer.invoke('analytics:exception', { description, fatal });
     },
     // Add new debug methods
     testEvent: (data: { category: string; action: string; label?: string }) =>

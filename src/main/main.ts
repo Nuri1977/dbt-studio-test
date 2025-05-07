@@ -135,7 +135,7 @@ if (!gotTheLock) {
           } catch (e: any) {
             console.error(e);
             // Track error
-            AnalyticsService.trackException(`Rosetta update error: ${e?.message}`);
+            AnalyticsService.trackException(`Rosetta update error: ${e?.message}`, false);
           }
 
           await updateMessage('Embedding Python...');
@@ -144,7 +144,7 @@ if (!gotTheLock) {
           } catch (e:any) {
             console.error(e);
             // Track error
-            AnalyticsService.trackException(`Python update error: ${e?.message}`);
+            AnalyticsService.trackException(`Python update error: ${e?.message}`, false);
           }
 
           const fakeStages = [
@@ -201,7 +201,7 @@ if (!gotTheLock) {
     .catch((error) => {
       console.log(error);
       // Track startup error
-      AnalyticsService.trackException(`App startup error: ${error.message}`, 1);
+      AnalyticsService.trackException(`App startup error: ${error.message}`, true);
     });
 
   // Handle second instance attempt - simplified
