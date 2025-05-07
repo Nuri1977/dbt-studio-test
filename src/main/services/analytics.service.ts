@@ -8,32 +8,34 @@ import path from 'path';
 const MEASUREMENT_ID = 'G-VBXMX54ELS';
 const SECRET_KEY = 'dlitu4BzSCq3EIgyxphkpQ';
 
+interface AnalyticsEvent {
+  category: string;
+  action: string;
+  label?: string;
+  timestamp: string;
+  response?: {
+    status?: number;
+    statusText?: string;
+    clientId: string;
+    sessionId: string;
+    serverResponse: any;
+    responseHeaders: any;
+  };
+  error?: {
+    message: string;
+    code?: string;
+    response?: any;
+    status?: number;
+    statusText?: string;
+  };
+}
+
 export default class AnalyticsService {
   private static analytics: Analytics;
   private static clientID: string;
   private static sessionID: string;
   private static debugMode: boolean;
-  private static lastEvent: {
-    category: string;
-    action: string;
-    label?: string;
-    timestamp: string;
-    response?: {
-      status?: number;
-      statusText?: string;
-      clientId: string;
-      sessionId: string;
-      serverResponse: any;
-      responseHeaders: any;
-    };
-    error?: {
-      message: string;
-      code?: string;
-      response?: any;
-      status?: number;
-      statusText?: string;
-    };
-  } | null = null;
+  private static lastEvent: AnalyticsEvent | null = null;
 
   private static initialize() {
     if (!this.analytics) {
@@ -83,7 +85,7 @@ export default class AnalyticsService {
     category: string,
     action: string,
     options: { evLabel?: string; evValue?: number } = {}
-  ): Promise<void> {
+  ): Promise<AnalyticsEvent> {
     try {
       const analytics = this.initialize();
       const eventName = `${category}_${action}`.toLowerCase().replace(/\s+/g, '_');
