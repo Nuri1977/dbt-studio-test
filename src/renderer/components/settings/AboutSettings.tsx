@@ -3,6 +3,7 @@ import { Typography, Box, Link, Divider, Stack } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 import { Icon } from '../index';
 import { icons } from '../../../../assets';
+import { AnalyticsDebugPanel } from './AnalyticsDebugPanel';
 
 export const AboutSettings: React.FC = () => {
   return (
@@ -125,6 +126,13 @@ export const AboutSettings: React.FC = () => {
             Learn more about Rosetta dbt™ Studio
         </Link>
       </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Add Analytics Debug Panel */}
+      <Box sx={{ mt: 4 }}>
+        <AnalyticsDebugPanel />
+      </Box>
     </Box>
   );
 };

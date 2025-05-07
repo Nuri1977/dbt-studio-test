@@ -59,7 +59,11 @@ const electronHandler = {
           send_to: 'G-VBXMX54ELS'
         });
       }
-    }
+    },
+    // Add new debug methods
+    testEvent: (data: { category: string; action: string; label?: string }) =>
+      ipcRenderer.invoke('analytics:test-event', data),
+    getStatus: () => ipcRenderer.invoke('analytics:get-status'),
   }
 };
 

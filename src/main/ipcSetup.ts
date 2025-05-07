@@ -5,6 +5,7 @@ import {
   registerProjectHandlers,
   registerSettingsHandlers,
   registerGitHandlers,
+  registerAnalyticsHandlers,
 } from './ipcHandlers';
 
 const registerHandlers = (mainWindow: BrowserWindow) => {
@@ -13,6 +14,7 @@ const registerHandlers = (mainWindow: BrowserWindow) => {
   registerProjectHandlers();
   registerConnectorsHandlers();
   registerGitHandlers();
+  registerAnalyticsHandlers();
 };
 
 export default registerHandlers;

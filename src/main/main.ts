@@ -5,7 +5,7 @@ import { loadEnvironment } from './utils/setupHelpers';
 import { AssetUrl } from './utils/assetUrl';
 import { AssetServer } from './utils/assetServer';
 import { setupApplicationIcon } from './utils/iconUtils';
-import { SettingsService, analyticsService } from './services';
+import { SettingsService, AnalyticsService } from './services';
 import { copyAssetsToUserData } from './utils/fileHelper';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -40,11 +40,42 @@ if (!gotTheLock) {
     .then(() => {
       // Set up session for Google Analytics
       try {
-        // Configure session to allow Google Analytics domains
+        // Configure session to allow Google Analytics domains and log requests/responses
         session.defaultSession.webRequest.onBeforeSendHeaders(
           { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
           (details, callback) => {
+            console.log('GA Request:', {
+              url: details.url,
+              method: details.method,
+              timestamp: new Date().toISOString()
+            });
             callback({ requestHeaders: details.requestHeaders });
+          }
+        );
+
+        // Add response logging
+        session.defaultSession.webRequest.onCompleted(
+          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
+          (details) => {
+            console.log('GA Response:', {
+              url: details.url,
+              statusCode: details.statusCode,
+              statusLine: details.statusLine,
+              timestamp: new Date().toISOString(),
+              fromCache: details.fromCache
+            });
+          }
+        );
+
+        // Handle errors
+        session.defaultSession.webRequest.onErrorOccurred(
+          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
+          (details) => {
+            console.error('GA Error:', {
+              url: details.url,
+              error: details.error,
+              timestamp: new Date().toISOString()
+            });
           }
         );
 
@@ -78,7 +109,7 @@ if (!gotTheLock) {
       }
 
       // Track app launch event
-      analyticsService.trackEvent('Application', 'Launch', {
+      AnalyticsService.trackEvent('Application', 'Launch', {
         evLabel: `v${app.getVersion()}`
       });
 
@@ -90,7 +121,7 @@ if (!gotTheLock) {
       if (splash) {
         splash.webContents.once('did-finish-load', async () => {
           // Track splash screen loaded
-          analyticsService.trackScreen('SplashScreen');
+          AnalyticsService.trackScreen('SplashScreen');
 
           const updateMessage = async (msg: string) => {
             await splash.webContents.executeJavaScript(
@@ -104,7 +135,7 @@ if (!gotTheLock) {
           } catch (e: any) {
             console.error(e);
             // Track error
-            analyticsService.trackException(`Rosetta update error: ${e?.message}`);
+            AnalyticsService.trackException(`Rosetta update error: ${e?.message}`);
           }
 
           await updateMessage('Embedding Python...');
@@ -113,7 +144,7 @@ if (!gotTheLock) {
           } catch (e:any) {
             console.error(e);
             // Track error
-            analyticsService.trackException(`Python update error: ${e?.message}`);
+            AnalyticsService.trackException(`Python update error: ${e?.message}`);
           }
 
           const fakeStages = [
@@ -155,7 +186,7 @@ if (!gotTheLock) {
             mainWindow.focus();
 
             // Track app activation
-            analyticsService.trackEvent('Application', 'Activate');
+            AnalyticsService.trackEvent('Application', 'Activate');
           } else {
             // No windows exist, restart application
             windowManager.startApplication();
@@ -170,7 +201,7 @@ if (!gotTheLock) {
     .catch((error) => {
       console.log(error);
       // Track startup error
-      analyticsService.trackException(`App startup error: ${error.message}`, 1);
+      AnalyticsService.trackException(`App startup error: ${error.message}`, 1);
     });
 
   // Handle second instance attempt - simplified
@@ -187,7 +218,7 @@ if (!gotTheLock) {
       activeWindow.focus();
 
       // Track second instance attempt
-      analyticsService.trackEvent('Application', 'SecondInstance');
+      AnalyticsService.trackEvent('Application', 'SecondInstance');
     } else {
       // No visible windows, start fresh
       windowManager.startApplication();
@@ -197,12 +228,12 @@ if (!gotTheLock) {
 
 app.on('window-all-closed', () => {
   // Track all windows closed event
-  analyticsService.trackEvent('Application', 'AllWindowsClosed');
+  AnalyticsService.trackEvent('Application', 'AllWindowsClosed');
 
   // Don't quit - WindowManager will handle the actual quitting
 });
 
 // Track app quit event
 app.on('will-quit', () => {
-  analyticsService.trackEvent('Application', 'Quit');
+  AnalyticsService.trackEvent('Application', 'Quit');
 });

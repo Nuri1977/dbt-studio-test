@@ -3,4 +3,5 @@ export * from './AIProviderSettings';
 export * from './DbtSettings';
 export * from './RosettaSettings';
 export * from './AboutSettings';
+export * from './AnalyticsDebugPanel';
 

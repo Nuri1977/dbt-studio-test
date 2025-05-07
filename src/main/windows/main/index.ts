@@ -1,7 +1,7 @@
 import { BrowserWindow, shell, app, screen, Menu } from 'electron';
 import path from 'path';
 import { AppUpdater, resolveHtmlPath } from '../../utils/setupHelpers';
-import { analyticsService } from '../../services';
+import { AnalyticsService } from '../../services';
 
 export const createMainWindow = (
   onCloseCallback: () => void,
@@ -42,20 +42,20 @@ export const createMainWindow = (
       } else {
         mainWindow.show();
         // Track main window display
-        analyticsService.trackScreen('MainWindow');
+        AnalyticsService.trackScreen('MainWindow');
       }
     }
   });
 
   mainWindow.on('closed', () => {
     // Track main window closed
-    analyticsService.trackEvent('Window', 'MainWindowClosed');
+    AnalyticsService.trackEvent('Window', 'MainWindowClosed');
     onCloseCallback();
   });
 
   // Track external links
   mainWindow.webContents.setWindowOpenHandler((edata) => {
-    analyticsService.trackEvent('Navigation', 'ExternalLink', { evLabel: edata.url });
+    AnalyticsService.trackEvent('Navigation', 'ExternalLink', { evLabel: edata.url });
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
