@@ -62,19 +62,19 @@ if (!gotTheLock) {
           await updateMessage('Downloading latest Rosetta release...');
           try {
             await SettingsService.updateRosetta();
-          } catch (e) {
+          } catch (e: any) {
             console.error(e);
             // Track error
-            analyticsService.trackException(`Rosetta update error: ${e.message}`);
+            analyticsService.trackException(`Rosetta update error: ${e?.message}`);
           }
 
           await updateMessage('Embedding Python...');
           try {
             await SettingsService.updatePython();
-          } catch (e) {
+          } catch (e:any) {
             console.error(e);
             // Track error
-            analyticsService.trackException(`Python update error: ${e.message}`);
+            analyticsService.trackException(`Python update error: ${e?.message}`);
           }
 
           const fakeStages = [

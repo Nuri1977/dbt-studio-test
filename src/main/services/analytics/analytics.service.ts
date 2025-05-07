@@ -1,39 +1,74 @@
-import Analytics from 'electron-google-analytics';
+import Analytics from 'electron-google-analytics4';
 import { app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
-import electronLog from 'electron-log';
+import { machineIdSync } from 'node-machine-id';
+import path from 'path';
 
-// Your Google Analytics Property ID
-const TRACKING_ID = 'G-VBXMX54ELS'; // Google Analytics 4 (GA4) tracking ID
+// Your Google Analytics Property ID and Secret Key
+const MEASUREMENT_ID = 'G-VBXMX54ELS';
+const SECRET_KEY = 'dlitu4BzSCq3EIgyxphkpQ';
 
 class AnalyticsService {
   private analytics: Analytics;
   private clientID: string;
+  private sessionID: string;
+  private debugMode: boolean;
 
   constructor() {
-    this.analytics = new Analytics(TRACKING_ID);
-    // Generate or retrieve a persistent client ID
     this.clientID = this.getClientID();
+    this.sessionID = uuidv4();
+    this.debugMode = process.env.NODE_ENV === 'development';
 
-    electronLog.info('Analytics service initialized with tracking ID: G-VBXMX54ELS');
+    this.analytics = new Analytics(MEASUREMENT_ID, SECRET_KEY, this.clientID, this.sessionID);
+
+    if (this.debugMode) {
+      // Set up additional properties for debug environments
+      this.setParams({
+        debug_mode: true,
+        app_version: app.getVersion(),
+        os_platform: process.platform,
+        os_release: process.getSystemVersion()
+      });
+    }
+
+    // Set default user properties
+    this.setUserProperties({
+      app_version: app.getVersion(),
+      os_platform: process.platform
+    });
   }
 
   private getClientID(): string {
-    // In a real app, you might want to store this in a persistent storage
-    // For simplicity, we're generating a new UUID
-    return uuidv4();
+    try {
+      // Use machine ID as the client ID for consistent tracking across sessions
+      return machineIdSync(true);
+    } catch (error: any) {
+      return uuidv4();
+    }
   }
 
   /**
-   * Track a page view
+   * Set a custom parameter
    */
-  async trackPageView(hostname: string, url: string, title: string): Promise<void> {
-    try {
-      await this.analytics.pageview(hostname, url, title, this.clientID);
-      electronLog.debug(`Analytics pageview tracked: ${url}`);
-    } catch (err) {
-      electronLog.error('Analytics pageview error:', err);
-    }
+  set(key: string, value: any): AnalyticsService {
+    this.analytics.set(key, value);
+    return this;
+  }
+
+  /**
+   * Set multiple custom parameters
+   */
+  setParams(params: Record<string, any> = {}): AnalyticsService {
+    this.analytics.setParams(params);
+    return this;
+  }
+
+  /**
+   * Set user properties
+   */
+  setUserProperties(properties: Record<string, any> = {}): AnalyticsService {
+    this.analytics.setUserProperties(properties);
+    return this;
   }
 
   /**
@@ -45,13 +80,25 @@ class AnalyticsService {
     options: { evLabel?: string; evValue?: number } = {}
   ): Promise<void> {
     try {
-      await this.analytics.event(category, action, {
-        ...options,
-        clientID: this.clientID
-      });
-      electronLog.debug(`Analytics event tracked: ${category} - ${action}`);
-    } catch (err) {
-      electronLog.error('Analytics event error:', err);
+      // Set event properties based on category and action
+      const eventName = `${category}_${action}`.toLowerCase().replace(/\s+/g, '_');
+
+      if (options.evLabel) {
+        this.set('event_label', options.evLabel);
+      }
+
+      if (options.evValue !== undefined) {
+        this.set('event_value', options.evValue);
+      }
+
+      // Add timestamp for debug purposes
+      this.set('event_timestamp', new Date().toISOString());
+
+      // Send the event
+      await this.analytics.event(eventName);
+    } catch (err: any) {
+      // Silently fail but still throw for UI handling
+      throw err;
     }
   }
 
@@ -60,10 +107,15 @@ class AnalyticsService {
    */
   async trackException(description: string, fatal: number = 0): Promise<void> {
     try {
-      await this.analytics.exception(description, fatal, this.clientID);
-      electronLog.debug(`Analytics exception tracked: ${description}`);
-    } catch (err) {
-      electronLog.error('Analytics exception error:', err);
+      this.setParams({
+        exception_description: description,
+        is_fatal: fatal === 1,
+        timestamp: new Date().toISOString()
+      });
+
+      await this.analytics.event('exception');
+    } catch (err: any) {
+      // Silently fail
     }
   }
 
@@ -71,24 +123,41 @@ class AnalyticsService {
    * Track screen view (useful for different app sections)
    */
   async trackScreen(screenName: string): Promise<void> {
-    const appName = 'Rosetta_dbt_Studio';
-    const appVersion = app.getVersion();
-    const appID = 'org.rosettadb.dbtStudio';
-
     try {
-      await this.analytics.screen(
-        appName,
-        appVersion,
-        appID,
-        '',  // installer ID
-        screenName,
-        this.clientID
-      );
-      electronLog.debug(`Analytics screen view tracked: ${screenName}`);
-    } catch (err) {
-      electronLog.error('Analytics screen view error:', err);
+      const appName = 'Rosetta_dbt_Studio';
+      const appVersion = app.getVersion();
+
+      this.setParams({
+        screen_name: screenName,
+        app_name: appName,
+        app_version: appVersion,
+        timestamp: new Date().toISOString()
+      });
+
+      await this.analytics.event('screen_view');
+    } catch (err: any) {
+      // Silently fail
+    }
+  }
+
+  /**
+   * Track a page view
+   */
+  async trackPageView(hostname: string, url: string, title: string): Promise<void> {
+    try {
+      this.setParams({
+        page_location: url,
+        page_title: title,
+        hostname: hostname,
+        timestamp: new Date().toISOString()
+      });
+
+      await this.analytics.event('page_view');
+    } catch (err: any) {
+      // Silently fail
     }
   }
 }
 
 export const analyticsService = new AnalyticsService();
+export default AnalyticsService;

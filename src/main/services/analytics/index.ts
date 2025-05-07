@@ -1,1 +1,3 @@
-export * from './analytics.service';
+import { analyticsService } from './analytics.service';
+
+export { analyticsService };
