@@ -1,5 +1,5 @@
 import Analytics from 'electron-google-analytics4';
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { machineIdSync } from 'node-machine-id';
 import path from 'path';
@@ -94,11 +94,8 @@ class AnalyticsService {
       // Add timestamp for debug purposes
       this.set('event_timestamp', new Date().toISOString());
 
-      // Send the event through the analytics library
+      // Send the event
       await this.analytics.event(eventName);
-
-      // Also send the event through the renderer process if possible
-      this.sendEventToRenderer(category, action, options.evLabel, options.evValue);
     } catch (err: any) {
       // Silently fail but still throw for UI handling
       throw err;
@@ -117,9 +114,6 @@ class AnalyticsService {
       });
 
       await this.analytics.event('exception');
-
-      // Also send through renderer
-      this.sendExceptionToRenderer(description, fatal === 1);
     } catch (err: any) {
       // Silently fail
     }
@@ -141,9 +135,6 @@ class AnalyticsService {
       });
 
       await this.analytics.event('screen_view');
-
-      // Track as page view in renderer
-      this.sendPageViewToRenderer(`/screens/${screenName.toLowerCase()}`, screenName);
     } catch (err: any) {
       // Silently fail
     }
@@ -162,58 +153,7 @@ class AnalyticsService {
       });
 
       await this.analytics.event('page_view');
-
-      // Also send through renderer
-      this.sendPageViewToRenderer(url, title);
     } catch (err: any) {
-      // Silently fail
-    }
-  }
-
-  /**
-   * Send an event to the renderer process for tracking with gtag
-   */
-  private sendEventToRenderer(category: string, action: string, label?: string, value?: number): void {
-    try {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow && !focusedWindow.isDestroyed()) {
-        focusedWindow.webContents.executeJavaScript(
-          `window.electron.analytics.trackEvent("${category}", "${action}", ${label ? `"${label}"` : 'undefined'}, ${value !== undefined ? value : 'undefined'})`
-        );
-      }
-    } catch (err) {
-      // Silently fail
-    }
-  }
-
-  /**
-   * Send exception to renderer process
-   */
-  private sendExceptionToRenderer(description: string, fatal: boolean): void {
-    try {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow && !focusedWindow.isDestroyed()) {
-        focusedWindow.webContents.executeJavaScript(
-          `window.electron.analytics.trackException("${description.replace(/"/g, '\\"')}", ${fatal})`
-        );
-      }
-    } catch (err) {
-      // Silently fail
-    }
-  }
-
-  /**
-   * Send page view to renderer process
-   */
-  private sendPageViewToRenderer(path: string, title: string): void {
-    try {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow && !focusedWindow.isDestroyed()) {
-        focusedWindow.webContents.executeJavaScript(
-          `window.electron.analytics.trackPageView("${path.replace(/"/g, '\\"')}", "${title.replace(/"/g, '\\"')}")`
-        );
-      }
-    } catch (err) {
       // Silently fail
     }
   }

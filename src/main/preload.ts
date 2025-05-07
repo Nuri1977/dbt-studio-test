@@ -30,37 +30,6 @@ const electronHandler = {
     version,
     os: process.platform,
   },
-  // Add analytics bridge
-  analytics: {
-    trackEvent(category: string, action: string, label?: string, value?: number) {
-      if (window.gtag) {
-        window.gtag('event', `${category}_${action}`.toLowerCase().replace(/\s+/g, '_'), {
-          event_category: category,
-          event_label: label,
-          value: value,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
-    },
-    trackException(description: string, fatal: boolean = false) {
-      if (window.gtag) {
-        window.gtag('event', 'exception', {
-          description: description,
-          fatal: fatal ? 1 : 0,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
-    },
-    trackPageView(path: string, title: string) {
-      if (window.gtag) {
-        window.gtag('event', 'page_view', {
-          page_path: path,
-          page_title: title,
-          send_to: 'G-VBXMX54ELS'
-        });
-      }
-    }
-  }
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);
