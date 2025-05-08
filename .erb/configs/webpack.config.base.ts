@@ -56,6 +56,8 @@ const configuration: webpack.Configuration = {
   plugins: [
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production',
+      GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID || '',
+      GA_API_SECRET: process.env.GA_API_SECRET || '',
     }),
   ],
 };

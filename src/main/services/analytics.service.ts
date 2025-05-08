@@ -6,8 +6,20 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
-const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID || ''
-const GA_API_SECRET = process.env.GA_API_SECRET || '';
+// Get environment variables from webpack's EnvironmentPlugin
+const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID;
+const GA_API_SECRET = process.env.GA_API_SECRET;
+
+// Validate GA configuration
+const isGAConfigured = () => {
+  if (!GA_MEASUREMENT_ID || !GA_API_SECRET) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('GA4 Measurement ID or API Secret not configured. Please check your .env file.');
+    }
+    return false;
+  }
+  return true;
+};
 
 // GA4 requires specific parameter formats
 const GA4_PARAMETER_NAMES = {
@@ -160,8 +172,7 @@ export default class AnalyticsService {
   }
 
   private static async sendToGA4(eventName: string, params: Record<string, any> = {}) {
-    if (!GA_MEASUREMENT_ID || !GA_API_SECRET) {
-      console.warn('GA4 Measurement ID or API Secret not configured');
+    if (!isGAConfigured()) {
       return;
     }
 
