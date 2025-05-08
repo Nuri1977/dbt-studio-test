@@ -1,11 +1,11 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off, no-restricted-syntax: off, no-await-in-loop: off */
-import { app, protocol, session } from 'electron';
+import { app, protocol } from 'electron';
 import { WindowManager } from './windows';
 import { loadEnvironment } from './utils/setupHelpers';
 import { AssetUrl } from './utils/assetUrl';
 import { AssetServer } from './utils/assetServer';
 import { setupApplicationIcon } from './utils/iconUtils';
-import { SettingsService, AnalyticsService } from './services';
+import { SettingsService } from './services';
 import { copyAssetsToUserData } from './utils/fileHelper';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -38,81 +38,6 @@ if (!gotTheLock) {
   app
     .whenReady()
     .then(() => {
-      // Set up session for Google Analytics
-      try {
-        // Configure session to allow Google Analytics domains and log requests/responses
-        session.defaultSession.webRequest.onBeforeSendHeaders(
-          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
-          (details, callback) => {
-            console.log('GA Request:', {
-              url: details.url,
-              method: details.method,
-              timestamp: new Date().toISOString()
-            });
-            callback({ requestHeaders: details.requestHeaders });
-          }
-        );
-
-        // Add response logging
-        session.defaultSession.webRequest.onCompleted(
-          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
-          (details) => {
-            console.log('GA Response:', {
-              url: details.url,
-              statusCode: details.statusCode,
-              statusLine: details.statusLine,
-              timestamp: new Date().toISOString(),
-              fromCache: details.fromCache
-            });
-          }
-        );
-
-        // Handle errors
-        session.defaultSession.webRequest.onErrorOccurred(
-          { urls: ['https://*.googletagmanager.com/*', 'https://*.google-analytics.com/*'] },
-          (details) => {
-            console.error('GA Error:', {
-              url: details.url,
-              error: details.error,
-              timestamp: new Date().toISOString()
-            });
-          }
-        );
-
-        // Ensure cookies are persisted
-        session.defaultSession.cookies.on('changed', (event, cookie, cause, removed) => {
-          if (!removed &&
-              (cookie.domain?.includes('google-analytics.com') ||
-               cookie.domain?.includes('googletagmanager.com'))) {
-            // Construct the URL from the cookie domain and path
-            const protocol = cookie.secure ? 'https' : 'http';
-            const url = `${protocol}://${cookie.domain}${cookie.path || '/'}`;
-
-            // Make the cookie persistent
-            session.defaultSession.cookies.set({
-              url,
-              name: cookie.name,
-              value: cookie.value,
-              domain: cookie.domain,
-              path: cookie.path,
-              secure: cookie.secure,
-              httpOnly: cookie.httpOnly,
-              expirationDate: cookie.expirationDate || (Date.now() / 1000) + 31536000, // 1 year
-              sameSite: cookie.sameSite
-            });
-          }
-        });
-
-        console.log('Google Analytics session handling configured');
-      } catch (e) {
-        console.error('Failed to configure Google Analytics session:', e);
-      }
-
-      // Track app launch event
-      AnalyticsService.trackEvent('Application', 'Launch', {
-        evLabel: `v${app.getVersion()}`
-      });
-
       windowManager = new WindowManager();
       windowManager.startApplication();
       copyAssetsToUserData();
@@ -120,9 +45,6 @@ if (!gotTheLock) {
 
       if (splash) {
         splash.webContents.once('did-finish-load', async () => {
-          // Track splash screen loaded
-          AnalyticsService.trackScreen('SplashScreen');
-
           const updateMessage = async (msg: string) => {
             await splash.webContents.executeJavaScript(
               `window.updateLoaderMessage(${JSON.stringify(msg)})`,
@@ -132,19 +54,15 @@ if (!gotTheLock) {
           await updateMessage('Downloading latest Rosetta release...');
           try {
             await SettingsService.updateRosetta();
-          } catch (e: any) {
+          } catch (e) {
             console.error(e);
-            // Track error
-            AnalyticsService.trackException(`Rosetta update error: ${e?.message}`, false);
           }
 
           await updateMessage('Embedding Python...');
           try {
             await SettingsService.updatePython();
-          } catch (e:any) {
+          } catch (e) {
             console.error(e);
-            // Track error
-            AnalyticsService.trackException(`Python update error: ${e?.message}`, false);
           }
 
           const fakeStages = [
@@ -184,9 +102,6 @@ if (!gotTheLock) {
             if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
-
-            // Track app activation
-            AnalyticsService.trackEvent('Application', 'Activate');
           } else {
             // No windows exist, restart application
             windowManager.startApplication();
@@ -198,11 +113,7 @@ if (!gotTheLock) {
         }
       });
     })
-    .catch((error) => {
-      console.log(error);
-      // Track startup error
-      AnalyticsService.trackException(`App startup error: ${error.message}`, true);
-    });
+    .catch(console.log);
 
   // Handle second instance attempt - simplified
   app.on('second-instance', () => {
@@ -216,9 +127,6 @@ if (!gotTheLock) {
       if (activeWindow.isMinimized()) activeWindow.restore();
       activeWindow.show();
       activeWindow.focus();
-
-      // Track second instance attempt
-      AnalyticsService.trackEvent('Application', 'SecondInstance');
     } else {
       // No visible windows, start fresh
       windowManager.startApplication();
@@ -227,13 +135,5 @@ if (!gotTheLock) {
 }
 
 app.on('window-all-closed', () => {
-  // Track all windows closed event
-  AnalyticsService.trackEvent('Application', 'AllWindowsClosed');
-
   // Don't quit - WindowManager will handle the actual quitting
-});
-
-// Track app quit event
-app.on('will-quit', () => {
-  AnalyticsService.trackEvent('Application', 'Quit');
 });

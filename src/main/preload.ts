@@ -30,25 +30,6 @@ const electronHandler = {
     version,
     os: process.platform,
   },
-  // Add analytics bridge
-  analytics: {
-    trackEvent(category: string, action: string, options: { evLabel?: string; evValue?: number } = {}) {
-      return ipcRenderer.invoke('analytics:event', { category, action, options });
-    },
-    trackScreen(screenName: string) {
-      return ipcRenderer.invoke('analytics:screen', { screenName });
-    },
-    trackPageView(path: string, title: string) {
-      return ipcRenderer.invoke('analytics:pageview', { path, title });
-    },
-    trackException(description: string, fatal: boolean = false) {
-      return ipcRenderer.invoke('analytics:exception', { description, fatal });
-    },
-    // Add new debug methods
-    testEvent: (data: { category: string; action: string; label?: string }) =>
-      ipcRenderer.invoke('analytics:test-event', data),
-    getStatus: () => ipcRenderer.invoke('analytics:get-status'),
-  }
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);
