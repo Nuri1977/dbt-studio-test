@@ -6,8 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
-const MEASUREMENT_ID = 'G-VBXMX54ELS';
-const API_SECRET = 'dlitu4BzSCq3EIgyxphkpQ'; // Add your GA4 API secret here
+const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID || ''
+const GA_API_SECRET = process.env.GA_API_SECRET || '';
 
 // GA4 requires specific parameter formats
 const GA4_PARAMETER_NAMES = {
@@ -160,14 +160,14 @@ export default class AnalyticsService {
   }
 
   private static async sendToGA4(eventName: string, params: Record<string, any> = {}) {
-    if (!MEASUREMENT_ID || !API_SECRET) {
+    if (!GA_MEASUREMENT_ID || !GA_API_SECRET) {
       console.warn('GA4 Measurement ID or API Secret not configured');
       return;
     }
 
     // Use production endpoint always - debug endpoint can be unreliable
     const baseUrl = 'https://www.google-analytics.com/mp/collect';
-    const url = `${baseUrl}?measurement_id=${MEASUREMENT_ID}&api_secret=${API_SECRET}`;
+    const url = `${baseUrl}?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
 
     // Calculate engagement time
     const now = Date.now();

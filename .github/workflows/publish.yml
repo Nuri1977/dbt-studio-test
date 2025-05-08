@@ -24,11 +24,16 @@ jobs:
           npm run postinstall
 
       - name: Build project
+        env:
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: npm run build
 
       - name: Publish for macOS
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
           # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASS }}
           # APPLE_ID: ${{ secrets.APPLE_ID }}
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -55,11 +60,16 @@ jobs:
           npm run postinstall
 
       - name: Build project
+        env:
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: npm run build
 
       - name: Publish for Windows
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: |
           npm exec electron-builder -- --publish always --win
 
@@ -81,10 +91,15 @@ jobs:
           npm run postinstall
 
       - name: Build project
+        env:
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: npm run build
 
       - name: Publish for Linux
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: |
           npm exec electron-builder -- --publish always --linux deb rpm
