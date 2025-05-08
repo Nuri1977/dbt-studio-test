@@ -6,10 +6,6 @@ import webpack from 'webpack';
 import TsconfigPathsPlugins from 'tsconfig-paths-webpack-plugin';
 import webpackPaths from './webpack.paths';
 import { dependencies as externals } from '../../release/app/package.json';
-import dotenv from 'dotenv';
-
-// Load environment variables from .env file
-dotenv.config();
 
 const configuration: webpack.Configuration = {
   externals: [...Object.keys(externals || {})],
@@ -56,8 +52,6 @@ const configuration: webpack.Configuration = {
   plugins: [
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production',
-      GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID || '',
-      GA_API_SECRET: process.env.GA_API_SECRET || '',
     }),
   ],
 };
