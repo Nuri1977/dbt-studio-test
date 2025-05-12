@@ -4,6 +4,8 @@ import { app } from 'electron';
 import os from 'os';
 import Store from 'electron-store';
 
+const trackUrl = process.env.TRACK_URL || '';
+
 interface UpdateEvent {
   event: string;
   version: string;
@@ -115,7 +117,11 @@ export default class AnalyticsService {
 
         // Only send in production environment
         if (process.env.NODE_ENV === 'production') {
-          await axios.post('https://dbt-studio-tracker.vercel.app/api/track', telemetryPayload);
+          if(!trackUrl) {
+            console.error('TRACK_URL is not set. Telemetry will not be sent.');
+            return;
+          }
+          await axios.post(trackUrl, telemetryPayload);
           console.log('Update telemetry sent successfully.');
 
           this.lastEvent = {
